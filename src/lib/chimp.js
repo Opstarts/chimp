@@ -1,18 +1,18 @@
 /**
  * Externals
  */
-var async     = require('async'),
-    path      = require('path'),
-    chokidar  = require('chokidar'),
-    _         = require('underscore'),
-    log       = require('./log'),
-    freeport  = require('freeport'),
-    DDPClient = require('xolvio-ddp'),
-    fs        = require('fs'),
-    Hapi      = require('hapi'),
-    AutoupdateWatcher = require('./ddp-watcher'),
-    colors = require('colors'),
-    booleanHelper = require('./boolean-helper');
+var async = require('async'),
+  path = require('path'),
+  chokidar = require('chokidar'),
+  _ = require('underscore'),
+  log = require('./log'),
+  freeport = require('freeport'),
+  DDPClient = require('xolvio-ddp'),
+  fs = require('fs'),
+  Hapi = require('hapi'),
+  AutoupdateWatcher = require('./ddp-watcher'),
+  colors = require('colors'),
+  booleanHelper = require('./boolean-helper');
 
 colors.enabled = true;
 var DEFAULT_COLOR = 'yellow';
@@ -49,7 +49,7 @@ Chimp.install = function (callback) {
  * @param {Object} options
  * @api public
  */
-function Chimp (options) {
+function Chimp(options) {
 
   this.chokidar = chokidar;
   this.options = options || {};
@@ -57,6 +57,7 @@ function Chimp (options) {
   this.isInterrupting = false;
   this.exec = require('child_process').exec;
   this.fs = fs;
+  this.testRunnerRunOrder = [];
 
   // store all cli parameters in env hash
   for (var option in options) {
@@ -165,7 +166,7 @@ Chimp.prototype.watch = function () {
     usePolling: this.options.watchWithPolling
   });
 
-  if(process.env['chimp.watchSource']){
+  if (process.env['chimp.watchSource']) {
     watcher.add(process.env['chimp.watchSource']);
   }
 
@@ -278,7 +279,7 @@ Chimp.prototype._handshakeOverDDP = function () {
   });
 };
 
-Chimp.prototype._parseResult = function(res) {
+Chimp.prototype._parseResult = function (res) {
   // FIXME this is shitty, there's got to be a nicer way to deal with variable async chains
   var cucumberResults = res[1][1] ? res[1][1] : res[1][0];
   if (!cucumberResults) {
@@ -351,6 +352,23 @@ Chimp.prototype.run = function (callback) {
 
   var self = this;
 
+  function getJsonCucumberResults(result) {
+    const startProcessesIndex = 1;
+    if (!result || !result[startProcessesIndex] ) {
+      return [];
+    }
+
+    let jsonResult = '[]';
+    _.any(['domain', 'critical', 'generic'], (type) => {
+      let _testRunner = _.findWhere(self.testRunnerRunOrder, {name: 'cucumber', type });
+      if (_testRunner) {
+        jsonResult = result[startProcessesIndex][_testRunner.index];
+        return true;
+      }
+    });
+    return JSON.parse(jsonResult);
+  }
+
   async.series(
     [
       self.interrupt.bind(self),
@@ -367,8 +385,7 @@ Chimp.prototype.run = function (callback) {
       if (self.options.simianAccessToken &&
         self.options.simianResultBranch !== false
       ) {
-        const jsonCucumberResult = result && result[1] && result[1][1] ?
-          JSON.parse(result[1][1]) : [];
+        const jsonCucumberResult = getJsonCucumberResults(result);
         const simianReporter = new exports.SimianReporter(self.options);
         simianReporter.report(jsonCucumberResult, () => {
           callback(error, result);
@@ -393,6 +410,7 @@ Chimp.prototype.interrupt = function (callback) {
 
   var self = this;
 
+
   self.isInterrupting = true;
 
   if (!self.processes || self.processes.length === 0) {
@@ -410,7 +428,7 @@ Chimp.prototype.interrupt = function (callback) {
   }
 
   var processes = _.collect(reverseProcesses, function (process) {
-    return process.interrupt.bind(process)
+    return process.interrupt.bind(process);
   });
 
   async.series(processes, function (error, r) {
@@ -459,8 +477,9 @@ Chimp.prototype._startProcesses = function (callback) {
 
   self.processes = self._createProcesses();
 
+
   var processes = _.collect(self.processes, function (process) {
-    return process.start.bind(process)
+    return process.start.bind(process);
   });
 
   // pushing at least one processes guarantees the series below runs
@@ -487,6 +506,11 @@ Chimp.prototype._startProcesses = function (callback) {
 Chimp.prototype._createProcesses = function () {
 
   var processes = [];
+  const self = this;
+
+  const addTestRunnerToRunOrder = function (name, type) {
+    self.testRunnerRunOrder.push({name, type, index: processes.length - 1});
+  };
 
   if (this.options.browser === 'phantomjs') {
     process.env['chimp.host'] = this.options.host = 'localhost';
@@ -520,6 +544,7 @@ Chimp.prototype._createProcesses = function () {
         options.r.push(options.domainSteps);
         processes.push(new exports.Consoler(message[DEFAULT_COLOR]));
         processes.push(new exports.Cucumber(options));
+        addTestRunnerToRunOrder('cucumber', 'domain');
         processes.push(new exports.Consoler(''));
       }
       // critical scenarios
@@ -534,10 +559,12 @@ Chimp.prototype._createProcesses = function () {
       options.r.push(options.criticalSteps);
       processes.push(new exports.Consoler(message[DEFAULT_COLOR]));
       processes.push(new exports.Cucumber(options));
+      addTestRunnerToRunOrder('cucumber', 'critical');
       processes.push(new exports.Consoler(''));
     } else {
       const cucumber = new exports.Cucumber(this.options);
       processes.push(cucumber);
+      addTestRunnerToRunOrder('cucumber', 'generic');
     }
 
   }
@@ -551,7 +578,7 @@ Chimp.prototype._createProcesses = function () {
  *
  * @api private
  */
-Chimp.prototype._handleMeteorInterrupt = function() {
+Chimp.prototype._handleMeteorInterrupt = function () {
   if (process.env.MIRROR_PORT) {
     process.on('SIGINT', function () {
       log.debug('[chimp] SIGINT detected, killing process');

@@ -2,6 +2,7 @@ jest.dontMock('../lib/chimp.js');
 jest.dontMock('../lib/boolean-helper');
 jest.dontMock('underscore');
 jest.dontMock('async');
+jest.dontMock('wrappy');
 
 describe('Chimp', function () {
 
@@ -28,7 +29,7 @@ describe('Chimp', function () {
 
       var myOptions = {
         a: 1,
-        b: "aString"
+        b: 'aString'
       };
       var chimp = new Chimp(myOptions);
 
@@ -602,7 +603,7 @@ describe('Chimp', function () {
 
       var orderCounter = 0;
 
-      function Process () {
+      function Process() {
         this.orderRun = -1;
       }
 
@@ -786,7 +787,7 @@ describe('Chimp', function () {
 
       var chimp = new Chimp();
 
-      function Process () {
+      function Process() {
         this.state = 'constructed';
       }
 
@@ -816,7 +817,7 @@ describe('Chimp', function () {
 
       var chimp = new Chimp();
 
-      function Process () {
+      function Process() {
         this.state = 'constructed';
       }
 

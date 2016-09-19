@@ -1,6 +1,6 @@
-var phantomjs     = require('phantomjs-bin'),
-    processHelper = require('./process-helper.js'),
-    log           = require('./log');
+var phantomjs = require('phantomjs2'),
+  processHelper = require('./process-helper.js'),
+  log = require('./log');
 
 /**
  * Phantom Constructor
@@ -8,7 +8,7 @@ var phantomjs     = require('phantomjs-bin'),
  * @param {Object} options
  * @api public
  */
-function Phantom (options) {
+function Phantom(options) {
   if (!options) {
     throw new Error('options is required');
   }
@@ -38,7 +38,7 @@ Phantom.prototype.start = function (callback) {
   }
 
   this.child = processHelper.start({
-    bin: phantomjs.path,
+    bin: process.env['chimp.phantom_path'] || phantomjs.path,
     prefix: 'phantom',
     args: ['--webdriver', port],
     waitForMessage: /GhostDriver - Main - running on port/,

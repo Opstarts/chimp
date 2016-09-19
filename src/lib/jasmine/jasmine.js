@@ -1,11 +1,11 @@
-var path          = require('path'),
-    cp            = require('child-process-debug'),
-    processHelper = require('./../process-helper.js'),
-    log           = require('./../log'),
-    _             = require('underscore'),
-    colors        = require('colors'),
-    glob          = require('glob'),
-    fs            = require('fs-extra');
+var path = require('path'),
+  cp = require('child-process-debug'),
+  processHelper = require('./../process-helper.js'),
+  log = require('./../log'),
+  _ = require('underscore'),
+  colors = require('colors'),
+  glob = require('glob'),
+  fs = require('fs-extra');
 
 /**
  * Mocha Constructor
@@ -63,7 +63,6 @@ Jasmine.prototype.start = function (callback) {
 
   self.child = cp.fork(path.join(__dirname, 'jasmine-wrapper.js'), [], opts);
 
-  process.stdin.pipe(this.child.stdin);
   self.child.stdout.pipe(process.stdout);
   self.child.stderr.pipe(process.stderr);
 

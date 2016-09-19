@@ -1,13 +1,13 @@
 require('../babel-register');
 
 var Mocha = require('mocha'),
-    fs    = require('fs'),
-    path  = require('path'),
-    exit  = require('exit'),
-    glob  = require('glob'),
-    ui    = require('./mocha-fiberized-ui');
+  fs = require('fs'),
+  path = require('path'),
+  exit = require('exit'),
+  glob = require('glob'),
+  ui = require('./mocha-fiberized-ui');
 
-import {parseBoolean, parseString } from '../environment-variable-parsers';
+import {parseBoolean, parseNullableString, parseString} from '../environment-variable-parsers';
 import escapeRegExp from '../utils/escape-reg-exp';
 
 var mochaOptions = {
@@ -17,10 +17,12 @@ var mochaOptions = {
   reporter: process.env['chimp.mochaReporter']
 };
 
+var mochaGrep = parseNullableString(process.env['chimp.mochaGrep']);
+
 if (parseBoolean(process.env['chimp.watch'])) {
-  mochaOptions.grep = new RegExp(
-    parseString(process.env['chimp.watchTags']).split(',').map(escapeRegExp).join('|')
-  );
+  mochaOptions.grep = new RegExp(parseString(process.env['chimp.watchTags']).split(',').map(escapeRegExp).join('|'));
+} else if (mochaGrep) {
+  mochaOptions.grep = mochaGrep;
 } else {
   mochaOptions.grep = new RegExp(
     parseString(process.env['chimp.mochaTags']).split(',').map(escapeRegExp).join('|')
@@ -32,7 +34,7 @@ var mocha = new Mocha(mochaOptions);
 mocha.addFile(path.join(path.resolve(__dirname, path.join('mocha-helper.js'))));
 
 if (process.argv.length > 3) {
-  process.argv.splice(3).forEach(function(spec) {
+  process.argv.splice(3).forEach(function (spec) {
     mocha.addFile(spec);
   });
 } else {
@@ -52,6 +54,5 @@ try {
     exit(failures);
   });
 } catch (e) {
-  throw(e);
+  throw (e);
 }
-

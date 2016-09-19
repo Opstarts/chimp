@@ -34,12 +34,9 @@ module.exports = function hooks() {
 
   /**
    * Capture screenshots either for erroneous / all steps
-   *
-   * @param {Function} event
    */
   let lastStep;
-  this.StepResult((event) => { // eslint-disable-line new-cap
-    const stepResult = event.getPayloadItem('stepResult');
+  this.StepResult((stepResult) => { // eslint-disable-line new-cap
     lastStep = stepResult.getStep();
     if (shouldTakeScreenshot(stepResult)) {
       log.debug('[chimp][hooks] capturing screenshot');
@@ -60,7 +57,7 @@ module.exports = function hooks() {
         var _fileName = lastStep.getKeyword() + ' ' + lastStep.getName() + affix;
         if (global.browser.instances) {
           global.browser.instances.forEach(function (instance, index) {
-            instance.captureSync(_fileName + '_browser_' + index)
+            instance.captureSync(_fileName + '_browser_' + index);
           });
         } else {
           global.browser.captureSync(_fileName);
@@ -71,8 +68,6 @@ module.exports = function hooks() {
 
   /**
    * Stores captures screenshots in the report
-   *
-   * @param {Function} scenario
    */
   this.After((scenario) => { // eslint-disable-line new-cap
     _.each(screenshots, (element) => {
@@ -84,9 +79,6 @@ module.exports = function hooks() {
   /**
    * After features have run we close the browser and optionally notify
    * SauceLabs
-   *
-   * @param {Function} event
-   * @param {Function} callback
    */
   this.registerHandler('AfterFeatures', () => {
     log.debug('[chimp][hooks] Starting AfterFeatures');
