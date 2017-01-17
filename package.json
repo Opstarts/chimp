@@ -1,6 +1,6 @@
 {
   "name": "@opstarts/chimp",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "description": "Develop acceptance tests & end-to-end tests with realtime feedback.",
   "keywords": [
     "simian",
@@ -34,11 +34,11 @@
     "lintfix": "eslint ./src --fix",
     "start": "node ./scripts/run.js",
     "testonly": "npm run testunit && npm run prepublish && node ./scripts/run-tests.js",
-    "testunit": "mocha --opts ./mocha.opts `node -e \"console.log(require('./package.json').mocha.tests.join(' '))\"`",
+    "testunit": "mocha --opts ./mocha.opts \"`node -e \"console.log(require('./package.json').mocha.tests.join(' '))\"`\"",
     "test": "npm run lint && npm run testonly",
-    "publish-patch": "npm version patch; npm publish; git push; git push --tags",
-    "publish-minor": "npm version minor; npm publish; git push; git push --tags",
-    "publish-major": "npm version major; npm publish; git push; git push --tags"
+    "publish-patch": "./scripts/release.sh patch",
+    "publish-minor": "./scripts/release.sh minor",
+    "publish-major": "./scripts/release.sh major"
   },
   "main": "dist/lib/chimp.js",
   "bin": {
